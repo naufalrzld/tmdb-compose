@@ -2,7 +2,7 @@ pipeline {
     agent {
         docker {
             image 'android-builder'
-            args '-v /var/jenkins_home/.gradle:/root/.gradle'
+            args '-u root:root -v /var/jenkins_home/.gradle:/root/.gradle'
         }
     }
 
