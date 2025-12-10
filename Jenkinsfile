@@ -16,6 +16,12 @@ pipeline {
             }
         }
 
+        stage('Preparation') {
+            steps {
+                sh "chmod +x gradlew"
+            }
+        }
+
         stage('Gradle Clean') {
             steps {
                 sh "./gradlew clean --warning-mode=all"
