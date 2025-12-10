@@ -4,7 +4,7 @@ pipeline {
     environment {
         ANDROID_HOME = "/opt/android-sdk"
         ANDROID_SDK_ROOT = "/opt/android-sdk"
-        JAVA_HOME = "/usr/lib/jvm/java-17-openjdk-amd64"
+        JAVA_HOME = "/opt/java/openjdk"
         PATH = "/opt/android-sdk/platform-tools:/opt/android-sdk/cmdline-tools/latest/bin:/opt/android-sdk/emulator:$PATH"
     }
 
