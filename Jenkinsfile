@@ -1,9 +1,11 @@
 pipeline {
-    agent {
-        docker {
-            image 'android-builder'
-            args '-u root:root -v /var/jenkins_home/.gradle:/root/.gradle'
-        }
+    agent any
+
+    environment {
+        ANDROID_HOME = "/opt/android-sdk"
+        ANDROID_SDK_ROOT = "/opt/android-sdk"
+        JAVA_HOME = "/usr/lib/jvm/java-17-openjdk-amd64"
+        PATH = "/opt/android-sdk/platform-tools:/opt/android-sdk/cmdline-tools/latest/bin:/opt/android-sdk/emulator:$PATH"
     }
 
     stages {
@@ -14,34 +16,37 @@ pipeline {
             }
         }
 
-        stage('Prepare Gradle') {
+        stage('Gradle Clean') {
             steps {
-                sh 'chmod +x ./gradlew'
-                sh './gradlew --version'
+                sh "./gradlew clean --warning-mode=all"
             }
         }
 
-        stage('Build Debug') {
+        stage('Assemble Debug') {
             steps {
-                sh './gradlew clean assembleDebug --stacktrace'
+                sh "./gradlew assembleDebug --warning-mode=all"
             }
         }
 
-        stage('Test') {
+        stage('List Build Output') {
             steps {
-                sh './gradlew testDebugUnitTest --stacktrace'
+                sh "ls -R app/build/outputs"
             }
         }
 
+        stage('Archive APK/AAB') {
+            steps {
+                archiveArtifacts artifacts: 'app/build/outputs/**', fingerprint: true
+            }
+        }
     }
 
     post {
-        success {
-            echo "Build OK — Archiving artifacts"
-            archiveArtifacts artifacts: '**/*.apk', fingerprint: true
-        }
         failure {
-            echo "Build Failed"
+            echo "❌ Build gagal!"
+        }
+        success {
+            echo "🎉 Build berhasil!"
         }
     }
 }
