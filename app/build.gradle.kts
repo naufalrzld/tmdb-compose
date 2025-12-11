@@ -1,8 +1,11 @@
+import com.google.firebase.appdistribution.gradle.firebaseAppDistribution
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.appdistribution)
 }
 
 android {
@@ -22,6 +25,12 @@ android {
     }
 
     buildTypes {
+        debug {
+            firebaseAppDistribution {
+                serviceCredentialsFile = System.getenv("FIREBASE_APP_DISTRIBUTION_SERVICE_CREDENTIALS")
+                groups = "qa-team"
+            }
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -56,6 +65,7 @@ dependencies {
     implementation(libs.koin)
     implementation(libs.paging)
     implementation(libs.youtube.player)
+    implementation(platform(libs.firebase.bom))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

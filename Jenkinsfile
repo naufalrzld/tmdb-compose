@@ -18,6 +18,12 @@ pipeline {
 
         stage('Preparation') {
             steps {
+                withCredentials([file(credentialsId: 'google-services', variable: 'GS_FILE')]) {
+                    sh """
+                        echo "Copying google-services.json into app/"
+                        cp "$GS_FILE" app/google-services.json
+                    """
+                }
                 sh "chmod +x gradlew"
             }
         }
@@ -43,6 +49,17 @@ pipeline {
         stage('Archive APK/AAB') {
             steps {
                 archiveArtifacts artifacts: 'app/build/outputs/**', fingerprint: true
+            }
+        }
+
+        stage('Deploy to Firebase App Distribution') {
+            steps {
+                withCredentials([file(credentialsId: 'firebase-service-account', variable: 'FIREBASE_SERVICE_ACCOUNT')]) {
+                    sh """
+                        export FIREBASE_APP_DISTRIBUTION_SERVICE_CREDENTIALS="$FIREBASE_SERVICE_ACCOUNT"
+                        ./gradlew appDistributionUploadDebug --warning-mode=all
+                    """
+                }
             }
         }
     }
