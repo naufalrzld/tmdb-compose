@@ -37,7 +37,32 @@ pipeline {
 
         stage('Gradle Clean') {
             steps {
-                sh "./gradlew clean --warning-mode=all"
+                script {
+                    def doClean = false
+
+                    try {
+                        def response = timeout(time: 10, unit: 'SECONDS') {
+                            input(
+                                id: 'cleanDecision',
+                                message: 'Need to perform Gradle Clean?',
+                                parameters: [
+                                    booleanParam(name: 'CLEAN_BUILD', defaultValue: false, description: 'Gradle Clean?')
+                                ]
+                            )
+                        }
+
+                        doClean = response.CLEAN_BUILD
+                    } catch (err) {
+                        echo "Skipping Gradle Clean due to timeout"
+                    }
+
+                    if (doClean) {
+                        echo "Running Gradle Clean..."
+                        sh "./gradlew clean --warning-mode=all"
+                    } else {
+                        echo "Skipping Gradle Clean."
+                    }
+                }
             }
         }
 
