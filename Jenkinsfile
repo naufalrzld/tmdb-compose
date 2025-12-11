@@ -18,10 +18,17 @@ pipeline {
 
         stage('Preparation') {
             steps {
-                withCredentials([file(credentialsId: 'google-services', variable: 'GS_FILE')]) {
+                withCredentials([
+                    file(credentialsId: 'google-services', variable: 'GS_FILE'),
+                    file(credentialsId: 'local-properties', variable: 'LOCAL_PROPS_FILE')
+                ]) {
                     sh """
                         echo "Copying google-services.json into app/"
                         cp "$GS_FILE" app/google-services.json
+                    """
+                    sh """
+                        echo "Copying local.properties into project root"
+                        cp "$LOCAL_PROPS_FILE" local.properties
                     """
                 }
                 sh "chmod +x gradlew"
