@@ -62,7 +62,7 @@ pipeline {
         stage('Deploy to Firebase App Distribution') {
             steps {
                 script {
-                    def userInput = timeout(time: 30, unit: 'SECONDS') {
+                    def userInput = timeout(time: 5, unit: 'MINUTES') {
                         input(
                             id: 'userInputStep',
                             message: 'Input Groups and Release Notes for Firebase App Distribution',
