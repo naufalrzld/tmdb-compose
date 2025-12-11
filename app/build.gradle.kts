@@ -28,7 +28,6 @@ android {
         debug {
             firebaseAppDistribution {
                 serviceCredentialsFile = System.getenv("FIREBASE_APP_DISTRIBUTION_SERVICE_CREDENTIALS")
-                groups = "qa-team"
             }
         }
         release {

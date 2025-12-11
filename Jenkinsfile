@@ -54,11 +54,37 @@ pipeline {
 
         stage('Deploy to Firebase App Distribution') {
             steps {
-                withCredentials([file(credentialsId: 'firebase-service-account', variable: 'FIREBASE_SERVICE_ACCOUNT')]) {
-                    sh """
-                        export FIREBASE_APP_DISTRIBUTION_SERVICE_CREDENTIALS="$FIREBASE_SERVICE_ACCOUNT"
-                        ./gradlew appDistributionUploadDebug --warning-mode=all
-                    """
+                script {
+                    def userInput = timeout(time: 30, unit: 'SECONDS') {
+                        input(
+                            id: 'userInputStep',
+                            message: 'Input Groups and Release Notes for Firebase App Distribution',
+                            parameters: [
+                                string(name: 'GROUPS', defaultValue: '', description: 'Group name of testers for Firebase App Distribution (use alias)'),
+                                text(name: 'RELEASE_NOTES', defaultValue: 'Update build from Jenkins CI/CD', description: 'Release notes')
+                            ]
+                        )
+                    }
+
+                    def extraArgs = ""
+
+                    if (userInput.GROUPS?.trim()) {
+                        extraArgs += "--groups='${userInput.GROUPS}'"
+                    }
+
+                    if (userInput.RELEASE_NOTES?.trim()) {
+                        extraArgs += " --releaseNotes='${userInput.RELEASE_NOTES}'"
+                    }
+
+                    echo "Firebase Distribution Args: ${extraArgs}"
+
+                    withCredentials([file(credentialsId: 'firebase-service-account', variable: 'FIREBASE_SERVICE_ACCOUNT')]) {
+                        sh """
+                            export FIREBASE_APP_DISTRIBUTION_SERVICE_CREDENTIALS="$FIREBASE_SERVICE_ACCOUNT"
+
+                            ./gradlew appDistributionUploadDebug $extraArgs --warning-mode=all
+                        """
+                    }
                 }
             }
         }
