@@ -1,18 +1,12 @@
 pipeline {
-    agent {
-        docker {
-            image 'android-36-jenkins-agent'
-            label 'docker-agent'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
-        }
-    }
+    agent { label 'android-36-agent' }
 
-    environment {
-        ANDROID_HOME = "/opt/android-sdk"
-        ANDROID_SDK_ROOT = "/opt/android-sdk"
-        JAVA_HOME = "/opt/java/openjdk"
-        PATH = "/opt/android-sdk/platform-tools:/opt/android-sdk/cmdline-tools/latest/bin:/opt/android-sdk/emulator:$PATH"
-    }
+//     environment {
+//         ANDROID_HOME = "/opt/android-sdk"
+//         ANDROID_SDK_ROOT = "/opt/android-sdk"
+//         JAVA_HOME = "/opt/java/openjdk"
+//         PATH = "/opt/android-sdk/platform-tools:/opt/android-sdk/cmdline-tools/latest/bin:/opt/android-sdk/emulator:$PATH"
+//     }
 
     stages {
         stage('Checkout') {
