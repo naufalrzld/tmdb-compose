@@ -1,12 +1,23 @@
 pipeline {
     agent { label 'android-36-agent' }
 
-//     environment {
-//         ANDROID_HOME = "/opt/android-sdk"
-//         ANDROID_SDK_ROOT = "/opt/android-sdk"
-//         JAVA_HOME = "/opt/java/openjdk"
-//         PATH = "/opt/android-sdk/platform-tools:/opt/android-sdk/cmdline-tools/latest/bin:/opt/android-sdk/emulator:$PATH"
-//     }
+    parameters {
+        string(
+            name: 'APP_DISTRIBUTION_GROUPS',
+            defaultValue: ' qa-team',
+            description: 'App Distribution Testers & Groups (comma separated)'
+        )
+        text(
+            name: 'APP_DISTRIBUTION_RELEASE_NOTES',
+            defaultValue: 'Update build from Jenkins CI/CD',
+            description: 'Release notes'
+        )
+        booleanParam(
+            name: 'CLEAN_BUILD',
+            defaultValue: false,
+            description: 'Gradle Clean?'
+        )
+    }
 
     stages {
         stage('Checkout') {
@@ -37,25 +48,7 @@ pipeline {
         stage('Gradle Clean') {
             steps {
                 script {
-                    def doClean = false
-
-                    try {
-                        def response = timeout(time: 10, unit: 'SECONDS') {
-                            input(
-                                id: 'cleanDecision',
-                                message: 'Need to perform Gradle Clean?',
-                                parameters: [
-                                    booleanParam(name: 'CLEAN_BUILD', defaultValue: false, description: 'Gradle Clean?')
-                                ]
-                            )
-                        }
-
-                        doClean = response.CLEAN_BUILD
-                    } catch (err) {
-                        echo "Skipping Gradle Clean due to timeout"
-                    }
-
-                    if (doClean) {
+                    if (params.CLEAN_BUILD) {
                         echo "Running Gradle Clean..."
                         sh "./gradlew clean --warning-mode=all"
                     } else {
@@ -86,25 +79,14 @@ pipeline {
         stage('Deploy to Firebase App Distribution') {
             steps {
                 script {
-                    def userInput = timeout(time: 5, unit: 'MINUTES') {
-                        input(
-                            id: 'userInputStep',
-                            message: 'Input Groups and Release Notes for Firebase App Distribution',
-                            parameters: [
-                                string(name: 'GROUPS', defaultValue: '', description: 'Group name of testers for Firebase App Distribution (use alias)'),
-                                text(name: 'RELEASE_NOTES', defaultValue: 'Update build from Jenkins CI/CD', description: 'Release notes')
-                            ]
-                        )
-                    }
-
                     def extraArgs = ""
 
-                    if (userInput.GROUPS?.trim()) {
-                        extraArgs += "--groups='${userInput.GROUPS}'"
+                    if (params.APP_DISTRIBUTION_GROUPS.trim()) {
+                        extraArgs += "--groups='${params.APP_DISTRIBUTION_GROUPS}'"
                     }
 
-                    if (userInput.RELEASE_NOTES?.trim()) {
-                        extraArgs += " --releaseNotes='${userInput.RELEASE_NOTES}'"
+                    if (params.APP_DISTRIBUTION_RELEASE_NOTES.trim()) {
+                        extraArgs += " --releaseNotes='${params.APP_DISTRIBUTION_RELEASE_NOTES}'"
                     }
 
                     echo "Firebase Distribution Args: ${extraArgs}"
