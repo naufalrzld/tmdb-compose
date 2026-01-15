@@ -1,10 +1,28 @@
+def notifyTelegram(String status) {
+    def emoji = status == "SUCCESS" ? "✅" : "❌"
+
+    def message = """
+${emoji} *Android Build ${status}*
+
+🚚 Sent to: ${params.APP_DISTRIBUTION_GROUPS ?: "N/A"}
+📝 Release Notes: ${params.APP_DISTRIBUTION_RELEASE_NOTES ?: "N/A"}
+"""
+
+    sh """
+      curl -s -X POST https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage \
+      -d chat_id=${params.TELEGRAM_CHAT_ID} \
+      -d parse_mode=Markdown \
+      -d text="${message}"
+    """
+}
+
 pipeline {
     agent { label 'android-36-agent' }
 
     parameters {
         string(
             name: 'APP_DISTRIBUTION_GROUPS',
-            defaultValue: ' qa-team',
+            defaultValue: 'qa-team',
             description: 'App Distribution Testers & Groups (comma separated)'
         )
         text(
@@ -17,6 +35,15 @@ pipeline {
             defaultValue: false,
             description: 'Gradle Clean?'
         )
+        string(
+            name: 'TELEGRAM_CHAT_ID',
+            defaultValue: '',
+            description: 'Notify to Telegram Chat ID (leave empty to disable notifications)'
+        )
+    }
+
+    environment {
+        TELEGRAM_BOT_TOKEN = credentials('telegram-bot-token')
     }
 
     stages {
@@ -106,9 +133,19 @@ pipeline {
     post {
         failure {
             echo "❌ Build gagal!"
+            script {
+                if (params.TELEGRAM_CHAT_ID?.trim()) {
+                    notifyTelegram("FAILED")
+                }
+            }
         }
         success {
             echo "🎉 Build berhasil!"
+            script {
+                if (params.TELEGRAM_CHAT_ID?.trim()) {
+                    notifyTelegram("SUCCESS")
+                }
+            }
         }
     }
 }
